@@ -15,7 +15,7 @@ import random  # For random selection of marker types
 ELims=np.array([7.5,20])   # in MeV
 xsLims=np.array([0.01,500])  # in mb
 graphTitle=r'$^{181}$'+r'Ta'+r'('+r'$\gamma$'+r',x)'+r'$^{180}$'+r'Ta'
-legendLocation='upper right'
+legendLocation='lower right'
 figDimensions=(12,9)
 minorEticks=np.array([])  # in MeV
 minorXSticks=np.array([]) # in mb
@@ -31,8 +31,8 @@ XStickSubs=np.array([2.5, 5])
 # zoomDispLoc     Row2=[xs,height]; xs=cross section (mb) where
 #                                  lower left corner of zoom image
 #                                  goes. Height is box height in mb
-zoomBounds= np.array([ [12.2,12.4],[300, 450] ])
-zoomDispLoc=np.array([ [12.5,5], [0.25,24.75] ])
+# zoomBounds= np.array([ [14.5,15],[250, 400] ])
+# zoomDispLoc=np.array([ [13,3], [0.5,3.5] ])
 
 # Make sure theres something defined for these lists
 markerList=['.','v','^','H','p']
@@ -85,7 +85,7 @@ try:
     axins.xaxis.set_minor_formatter(tkr.EngFormatter(unit='eV'))
     axins.yaxis.set_minor_formatter(tkr.EngFormatter(unit='b'))
     axins.xaxis.set_minor_locator(tkr.LogLocator())
-    axins.yaxis.set_minor_locator(tkr.LinearLocator())
+    axins.yaxis.set_minor_locator(tkr.LinearLocator(numticks=4))
     axins.xaxis.set_ticks(zoomBounds[0]*1e6)
     axins.yaxis.set_ticks(zoomBounds[1]/1e3)
     zoomBox=True
@@ -108,7 +108,9 @@ for name, set in dataSets.items():
         markerSize=None
         lineStyle=''
 
-    color=sampleNoReplacement(colorList)
+    # color=sampleNoReplacement(colorList)
+    color=colorList[0]
+    colorList.remove(color)
     
     # For zoombox if specified
     if (zoomBox):
@@ -130,7 +132,7 @@ for name, set in dataSets.items():
     
     
     if (isLine):
-        lineWidth-=0.1
+        lineWidth-=0.2
 
 
 # Set some fixed settings for all graph scenarios
