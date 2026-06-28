@@ -7,39 +7,12 @@ import processargs
 import sys
 import random  # For random selection of marker types
 
-#
-# ============= Graph values to tweak =============
-#
-# Comment out a variable to assume automatic value assignment
-
-ELims=np.array([7.5,20])   # in MeV
-xsLims=np.array([0.01,500])  # in mb
-graphTitle=r'$^{181}$'+r'Ta'+r'('+r'$\gamma$'+r',x)'+r'$^{180}$'+r'Ta'
-legendLocation='lower right'
-figDimensions=(12,9)
-minorEticks=np.array([])  # in MeV
-minorXSticks=np.array([]) # in mb
-EtickSubs=np.array([8, 9, 10, 12.5, 15, 20])
-XStickSubs=np.array([2.5, 5])
-
-# zoomBounds      Row1=[Emin,Emax] of region to zoom in on [MeV]
-# zoomBounds      Row2=[XSmin,XSmax] of region to zoom in on [mb]
-#
-# zoomDispLoc     Row1=[E,width]; E=energy (MeV) where lower left 
-#                                 corner of zoom image will go.
-#                                 Width is box width in mb
-# zoomDispLoc     Row2=[xs,height]; xs=cross section (mb) where
-#                                  lower left corner of zoom image
-#                                  goes. Height is box height in mb
-# zoomBounds= np.array([ [14.5,15],[250, 400] ])
-# zoomDispLoc=np.array([ [13,3], [0.5,3.5] ])
-
 # Make sure theres something defined for these lists
 markerList=['.','v','^','H','p']
 lineStyleList=['-','--','-.',':']
 colorList=[
-    '#000fff',"#ff0000","#fe6bb9","#165700",
-    "#9000ff","#000000","#ffaa00"
+    '#000fff',"#ff0000","#165700",
+    "#9000ff","#000000","#ffaa00", "#fe6bb9"
 ]
 
 #
@@ -56,41 +29,51 @@ def sampleNoReplacement(set: list) -> str:
 
 
 # Call processing script to read in data and make sense of flags
-showPlot, dataSets = processargs.xsprocess(sys.argv)
+# showPlot, dataSets, graphTitle = processargs.xsprocess(sys.argv)
+flags, dataSets, config = processargs.xsprocess(sys.argv)
 
 # Initialize graph
 try:
-    fig, ax = plt.subplots(figsize=figDimensions)
-except NameError:
+    fig, ax = plt.subplots(figsize=config['figDimensions'])
+except KeyError:
+    print(f"No 'figDimensions' specified in xsconfig of json")
     fix, ax = plt.subplots()
 
-# If zoom box specified, deal with that
-zoomBox=False
-try:
-    zoomDispLoc[0,:]*=1e6
-    zoomDispLoc[1,:]/=1e3
-    zoomDispLoc=zoomDispLoc.transpose()
-    axins=ax.inset_axes(
-        bounds=[*zoomDispLoc[0], *zoomDispLoc[1]],
-        transform=ax.transData,
-        xlim=zoomBounds[0]*1e6, ylim=zoomBounds[1]/1e3
-    )
-    ax.indicate_inset_zoom(axins, edgecolor='black')
-    axins.set_xscale('log')
-    axins.set_yscale('log')
-    axins.xaxis.grid(which='both', linewidth=0.4)
-    axins.yaxis.grid(which='both', linewidth=0.4)
-    axins.xaxis.set_major_formatter(tkr.EngFormatter(unit='eV'))
-    axins.yaxis.set_major_formatter(tkr.EngFormatter(unit='b'))
-    axins.xaxis.set_minor_formatter(tkr.EngFormatter(unit='eV'))
-    axins.yaxis.set_minor_formatter(tkr.EngFormatter(unit='b'))
-    axins.xaxis.set_minor_locator(tkr.LogLocator())
-    axins.yaxis.set_minor_locator(tkr.LinearLocator(numticks=4))
-    axins.xaxis.set_ticks(zoomBounds[0]*1e6)
-    axins.yaxis.set_ticks(zoomBounds[1]/1e3)
-    zoomBox=True
-except NameError:
-    pass
+if (flags['zoomBox']==True):
+    try:
+        zoomDispLoc=np.array([
+            [config['zoomBox']['xMin'], config['zoomBox']['width'] ],
+            [config['zoomBox']['yMin'], config['zoomBox']['height']]
+        ])
+        zoomBounds=np.array([
+            config['zoomBox']['domain'],
+            config['zoomBox']['range']
+        ])
+        zoomDispLoc[0,:]*=1e6
+        zoomDispLoc[1,:]/=1e3
+        zoomDispLoc=zoomDispLoc.transpose()
+        axins=ax.inset_axes(
+            bounds=[*zoomDispLoc[0], *zoomDispLoc[1]],
+            transform=ax.transData,
+            xlim=zoomBounds[0]*1e6, ylim=zoomBounds[1]/1e3
+        )
+        ax.indicate_inset_zoom(axins, edgecolor='black')
+        axins.set_xscale('log')
+        axins.set_yscale('log')
+        axins.xaxis.grid(which='both', linewidth=0.4)
+        axins.yaxis.grid(which='both', linewidth=0.4)
+        axins.xaxis.set_major_formatter(tkr.EngFormatter(unit='eV'))
+        axins.yaxis.set_major_formatter(tkr.EngFormatter(unit='b'))
+        axins.xaxis.set_minor_formatter(tkr.EngFormatter(unit='eV'))
+        axins.yaxis.set_minor_formatter(tkr.EngFormatter(unit='b', places=2))
+        axins.xaxis.set_minor_locator(tkr.LogLocator())
+        axins.yaxis.set_minor_locator(tkr.LinearLocator(numticks=4))
+        axins.xaxis.set_ticks(zoomBounds[0]*1e6)
+        axins.yaxis.set_ticks(zoomBounds[1]/1e3)
+    except KeyError:
+        print(f"Could not process settings in 'zoomBox'")
+        pass
+
 
 
 lineWidth=1.25 # decrement this for every additional line graphed
@@ -102,7 +85,9 @@ for name, set in dataSets.items():
     if (isLine):
         markerStyle=''
         markerSize=None 
-        lineStyle=sampleNoReplacement(lineStyleList)
+        # lineStyle=sampleNoReplacement(lineStyleList)
+        lineStyle=lineStyleList[0]
+        lineStyleList.remove(lineStyle)
     else:
         markerStyle=sampleNoReplacement(markerList)
         markerSize=None
@@ -113,7 +98,7 @@ for name, set in dataSets.items():
     colorList.remove(color)
     
     # For zoombox if specified
-    if (zoomBox):
+    if (flags['zoomBox']):
         axins.errorbar(
         x=E*1e6, y=xs/1e3, xerr=dE*1e6, yerr=dxs/1e3,
         label=name, ls=lineStyle, linewidth=lineWidth,
@@ -128,9 +113,7 @@ for name, set in dataSets.items():
         marker=markerStyle, markersize=markerSize,
         c=color
     )
-
-    
-    
+    # Decrement line width for visibility (counter line overlap)
     if (isLine):
         lineWidth-=0.2
 
@@ -153,33 +136,39 @@ handles, labels = ax.get_legend_handles_labels()
 handles = [h[0] for h in handles]
 
 # Deal with script vars that can be varied
+ELims=np.array(config['domain'])
+xsLims=np.array(config['range'])
+EtickSubs=np.array(config['minorETicks'])
+XStickSubs=np.array(config['minorXSTicks'])
+legendLocation=config['legendLoc']
+graphTitle=config['title']
 try:
     ax.set_xlim(*ELims*1e6)
     ax.set_xticks(ELims*1e6)
-except NameError:
+except KeyError:
     pass
 try:
     ax.set_ylim(xsLims/1e3)
     ax.set_yticks(xsLims/1e3)
-except NameError:
+except KeyError:
     pass
 try:
     ax.xaxis.set_minor_locator(tkr.LogLocator(subs=EtickSubs))
-except NameError:
+except KeyError:
     pass
 try:
     ax.yaxis.set_minor_locator(tkr.LogLocator(subs=XStickSubs))
-except NameError:
+except KeyError:
     pass
 try:
     ax.legend(handles, labels, loc=legendLocation)
-except NameError:
+except KeyError:
     ax.legend(handles, labels)
 try:
     ax.set_title(f'{graphTitle}', fontsize=20)
-except NameError:
+except KeyError:
     pass
 
-plt.savefig('xsoutput.svg')
-if (showPlot):
+plt.savefig(f'xsoutput.{flags['imgType']}')
+if (flags['showPlot']):
     plt.show()

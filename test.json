@@ -1,0 +1,49 @@
+{
+
+    "xsGraphConfig":
+    {
+        "title":"$^{180}\\text{Ta}(\\gamma,\\text{x})^{180}\\text{Ta}$",
+        "domain":[7.5,20],
+        "range":[0.01,500],
+        "legendLoc":"lower right",
+        "figDimensions":[12,9],
+        "minorETicks":[8, 9, 10, 12.5, 15],
+        "minorXSTicks":[2.5, 5],
+
+        "zoomBox":
+        {
+            "domain":[8.5,8.7],
+            "range":[27, 37],
+            "xMin":9.5,
+            "yMin":0.6,
+            "width":3,
+            "height":5.4
+        }
+    },
+    
+    "data":
+    [
+        {
+            "name": "Personal Machine (TALYS-2.0)",
+            "path": "/home/robert/tendl23_on_talys2.0/rp073180.tot",
+            "values": ["e","xs"],
+            "isLine": true,
+            "duration":8940
+        },
+
+        {
+            "name": "Tendl-23 (from BOX)",
+            "path": "/home/robert/test_self_against_talys/tendl23_output/Ta/181/073180.pdat",
+            "values": ["e","xs"],
+            "isLine": true
+        },
+
+        {
+            "name": "Personal Machine (TALYS-2.2)",
+            "path":"/home/robert/tendl23_on_talys2.2_w_2.0params/rp073180.tot",
+            "values":["e","xs"],
+            "isLine":true,
+            "duration":8220
+        }
+    ]
+}
