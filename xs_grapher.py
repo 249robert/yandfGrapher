@@ -1,6 +1,4 @@
-
 import numpy as np
-import matplotlib.lines  as lns  # To get list of filled markers
 import matplotlib.pyplot as plt  # To plot
 import matplotlib.ticker as tkr  # To manage axis tickmark styling
 import processargs
@@ -85,15 +83,15 @@ for name, set in dataSets.items():
     if (isLine):
         markerStyle=''
         markerSize=None 
-        # lineStyle=sampleNoReplacement(lineStyleList)
         lineStyle=lineStyleList[0]
         lineStyleList.remove(lineStyle)
+        capSize=0
     else:
-        markerStyle=sampleNoReplacement(markerList)
+        markerStyle='.'
         markerSize=None
         lineStyle=''
+        capSize=2
 
-    # color=sampleNoReplacement(colorList)
     color=colorList[0]
     colorList.remove(color)
     
@@ -103,7 +101,7 @@ for name, set in dataSets.items():
         x=E*1e6, y=xs/1e3, xerr=dE*1e6, yerr=dxs/1e3,
         label=name, ls=lineStyle, linewidth=lineWidth,
         marker=markerStyle, markersize=markerSize,
-        c=color
+        c=color, capsize=capSize
         )
 
     # For main plot
@@ -111,7 +109,7 @@ for name, set in dataSets.items():
         x=E*1e6, y=xs/1e3, xerr=dE*1e6, yerr=dxs/1e3,
         label=name, ls=lineStyle, linewidth=lineWidth,
         marker=markerStyle, markersize=markerSize,
-        c=color
+        c=color, capsize=capSize
     )
     # Decrement line width for visibility (counter line overlap)
     if (isLine):
@@ -120,15 +118,16 @@ for name, set in dataSets.items():
 
 # Set some fixed settings for all graph scenarios
 ax.set_xscale('log')
-ax.set_yscale('log')
 ax.set_xlabel('Energy', fontsize=14)
 ax.set_ylabel('Cross section',fontsize=14)
 ax.xaxis.grid(which='both', linewidth=0.4)
+
+
+if (flags['linscale']==True):
+    pass
+else:
+    ax.set_yscale('log')
 ax.yaxis.grid(which='both', linewidth=0.4)
-ax.xaxis.set_major_formatter(tkr.EngFormatter(unit='eV'))
-ax.yaxis.set_major_formatter(tkr.EngFormatter(unit='b'))
-ax.xaxis.set_minor_formatter(tkr.EngFormatter(unit='eV'))
-ax.yaxis.set_minor_formatter(tkr.EngFormatter(unit='b'))
 
 # Remove errorbars from showing in the legend
 # https://stackoverflow.com/a/15551976
@@ -148,16 +147,7 @@ try:
 except KeyError:
     pass
 try:
-    ax.set_ylim(xsLims/1e3)
-    ax.set_yticks(xsLims/1e3)
-except KeyError:
-    pass
-try:
     ax.xaxis.set_minor_locator(tkr.LogLocator(subs=EtickSubs))
-except KeyError:
-    pass
-try:
-    ax.yaxis.set_minor_locator(tkr.LogLocator(subs=XStickSubs))
 except KeyError:
     pass
 try:
@@ -168,6 +158,35 @@ try:
     ax.set_title(f'{graphTitle}', fontsize=20)
 except KeyError:
     pass
+
+# For y scale handling
+if (flags['linscale']==True):
+    pass
+else:
+    try:
+        ax.set_ylim(xsLims/1e3)
+        ax.set_yticks(xsLims/1e3)
+    except KeyError:
+        pass
+    try:
+        ax.yaxis.set_minor_locator(tkr.LogLocator(subs=XStickSubs))
+    except KeyError:
+        pass
+
+
+# Moved down here to fix labeling for log-y and linear-y
+ax.xaxis.set_major_formatter(tkr.EngFormatter(unit='eV'))
+ax.yaxis.set_major_formatter(tkr.EngFormatter(unit='b'))
+ax.xaxis.set_minor_formatter(tkr.EngFormatter(unit='eV'))
+ax.yaxis.set_minor_formatter(tkr.EngFormatter(unit='b'))
+
+# For custom commands to take place
+try:
+    for command in config['customCommands']:
+        exec(command)
+except KeyError:
+    pass
+
 
 plt.savefig(f'xsoutput.{flags['imgType']}')
 if (flags['showPlot']):

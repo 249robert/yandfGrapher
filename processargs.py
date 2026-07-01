@@ -9,6 +9,7 @@ def flagprocess(args: list) -> dict:
     imgType=''     # Flag for output image format
     showPlot=False # Flag to open interactive plot window
     zoomBox=False  # Flag to render zoom box region
+    linY=False     # Flag to use linear scale on y axis
 
     for arg in args[1:]:
         if ('-file' in arg.lower()):
@@ -21,6 +22,8 @@ def flagprocess(args: list) -> dict:
             imgType=arg[eqIndex+1:].lower()
         elif ('-zoombox' in arg.lower()):
             zoomBox=True
+        elif ('-linscale' in arg.lower()):
+            linY=True
     # Check if name was specified
     try:
         type(fName)
@@ -36,7 +39,8 @@ def flagprocess(args: list) -> dict:
         'showPlot':showPlot,
         'imgType' :imgType,
         'zoomBox' :zoomBox,
-        'fName'   :fName
+        'fName'   :fName,
+        'linscale':linY
     }
     return flags
 

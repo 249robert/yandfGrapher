@@ -1,49 +1,84 @@
 {
-
     "xsGraphConfig":
     {
-        "title":"$^{180}\\text{Ta}(\\gamma,\\text{x})^{180}\\text{Ta}$",
-        "domain":[7.5,20],
+        "title":"$^{181}\\text{Ta}(\\gamma,\\text{n})^{180}\\text{Ta}$",
+        "domain":[7.5,10],
         "range":[0.01,500],
         "legendLoc":"lower right",
-        "figDimensions":[12,9],
-        "minorETicks":[8, 9, 10, 12.5, 15],
-        "minorXSTicks":[2.5, 5],
+        "figDimensions":[13.3333,7.5],
+        "minorETicks":[1, 2, 8, 9, 11, 12, 13, 14, 15, 18, 21, 23],
+        "minorXSTicks":[1, 2.5, 5],
 
         "zoomBox":
         {
             "domain":[8.5,8.7],
             "range":[27, 37],
             "xMin":9.5,
-            "yMin":0.6,
-            "width":3,
-            "height":5.4
-        }
+            "yMin":0.75,
+            "width":2.5,
+            "height":6.75
+        },
+
+        "customCommands":
+        [
+            "ax.axvline(x=7.576750E+06, c='#000000')",
+            "ax.text(.03,1.01, r'$E_{th}\\simeq 7.576750 \\text{MeV}$', transform=ax.transAxes)"
+        ]
     },
     
     "data":
     [
         {
-            "name": "Personal Machine (TALYS-2.0)",
-            "path": "/home/robert/tendl23_on_talys2.0/rp073180.tot",
+            "name": "TALYS-2.0",
+            "path": "/home/robert/tendl23_regTest/g/Ta181/T2.0_MT4_near_Q/meshed.tot",
             "values": ["e","xs"],
             "isLine": true,
             "duration":8940
         },
 
         {
-            "name": "Tendl-23 (from BOX)",
-            "path": "/home/robert/test_self_against_talys/tendl23_output/Ta/181/073180.pdat",
+            "name": "TALYS-2.2",
+            "path": "/home/robert/tendl23_regTest/g/Ta181/T2.2_2.0mp_MT4_near_Q/meshed.tot",
+            "values":["e","xs"],
+            "isLine":true,
+            "duration":8220
+        },
+
+        {
+            "name": "ENDF7u",
+            "path": "/home/robert/tendl23_regTest/g/Ta181/ENDFB-VIII.0/g-Ta181-MT004.endf",
+            "values":["e","xs"],
+            "isLine": true
+        },
+
+        {
+            "name": "IAEA/PD-2019",
+            "path": "/home/robert/tendl23_regTest/g/Ta181/IAEAPD-2019.2/g-Ta181-MT004.endf",
             "values": ["e","xs"],
             "isLine": true
         },
 
         {
-            "name": "Personal Machine (TALYS-2.2)",
-            "path":"/home/robert/tendl23_on_talys2.2_w_2.0params/rp073180.tot",
-            "values":["e","xs"],
-            "isLine":true,
-            "duration":8220
+            "name": "S.Goko+ 2006",
+            "path": "/home/robert/exfortables/g/Ta181/xs/004/g-Ta181-MT004-Goko-M0690002T.2006",
+            "values": ["e","xs","dxs"],
+            "isLine": false
+        },
+
+        {
+            "name": "H.Utsunomiya+ 2003",
+            "path": "/home/robert/exfortables/g/Ta181/xs/004/g-Ta181-MT004-Utsunomiya-M0664002.2003",
+            "values": ["e","xs","dxs"],
+            "isLine": false
+        },
+
+        {
+            "name": "S.N.Belyaev+ 1985",
+            "path": "/home/robert/exfortables/g/Ta181/xs/004/g-Ta181-MT004-Belyaev-M0146007.1985",
+            "values": ["e","xs","dxs"],
+            "isLine": false
         }
+
+
     ]
 }
