@@ -1,16 +1,20 @@
+#!/home/robert/yandfGrapher/.venv/bin/python3
 import numpy as np
 import matplotlib.pyplot as plt  # To plot
 import matplotlib.ticker as tkr  # To manage axis tickmark styling
 import processargs
 import sys
+import os
 import random  # For random selection of marker types
 
 # Make sure theres something defined for these lists
 markerList=['.','v','^','H','p']
 lineStyleList=['-','--','-.',':']
 colorList=[
-    '#000fff',"#ff0000","#165700",
-    "#9000ff","#000000","#ffaa00", "#fe6bb9"
+    '#000fff',"#ff0000","#208000",
+    "#9000ff","#000000","#ffaa00",
+    "#fe6bb9","#009E99FF","#980081",
+    "#00d36d","#626262","#9c9c00"
 ]
 
 #
@@ -30,12 +34,15 @@ def sampleNoReplacement(set: list) -> str:
 # showPlot, dataSets, graphTitle = processargs.xsprocess(sys.argv)
 flags, dataSets, config = processargs.xsprocess(sys.argv)
 
-# Initialize graph
+# Initialize graph in widescreen if svg or not specified dims
 try:
-    fig, ax = plt.subplots(figsize=config['figDimensions'])
+    if (flags['imgType']=='png'):
+        fig, ax = plt.subplots(figsize=config['pngDimensions'])
+    else:
+        fig, ax = plt.subplots(figsize=(12.8,7.2))
 except KeyError:
-    print(f"No 'figDimensions' specified in xsconfig of json")
-    fix, ax = plt.subplots()
+    print(f"No 'pngDimensions' specified in xsconfig of json")
+    fix, ax = plt.subplots(figsize=(12.8,7.2))
 
 if (flags['zoomBox']==True):
     try:
@@ -75,8 +82,8 @@ if (flags['zoomBox']==True):
 
 
 lineWidth=1.25 # decrement this for every additional line graphed
-for name, set in dataSets.items():
-    data, isLine = set
+for name, Set in dataSets.items():
+    data, isLine = Set
     E, dE, xs, dxs = data
     
     # Sample random styling (marker, line)
@@ -90,10 +97,11 @@ for name, set in dataSets.items():
         markerStyle='.'
         markerSize=None
         lineStyle=''
-        capSize=2
+        capSize=1.75
 
     color=colorList[0]
     colorList.remove(color)
+
     
     # For zoombox if specified
     if (flags['zoomBox']):
@@ -115,19 +123,77 @@ for name, set in dataSets.items():
     if (isLine):
         lineWidth-=0.2
 
+# Load xsConfig params
+ELims=np.array(config['domain'])
+xsLims=np.array(config['range'])
+# EtickSubs=np.array(config['minorETicks'])
+# XStickSubs=np.array(config['minorXSTicks'])
+legendLocation=config['legendLoc']
+graphTitle=config['title']
+
 
 # Set some fixed settings for all graph scenarios
 ax.set_xscale('log')
 ax.set_xlabel('Energy', fontsize=14)
 ax.set_ylabel('Cross section',fontsize=14)
-ax.xaxis.grid(which='both', linewidth=0.4)
+ax.xaxis.grid(which='major')
+ax.xaxis.grid(which='minor', linewidth=0.4, linestyle="-.")
+ax.yaxis.grid(which='major')
+ax.yaxis.grid(which='minor', linewidth=0.4, linestyle='-.')
+ax.xaxis.set_major_formatter(tkr.EngFormatter(unit='eV'))
 
 
+# Set y grid and tickmarks based on requested scale
+# else block adds custom gridlines and tickmarks for xs
+# try except blocks are for different ylims depending on
+# linscale vs logscale
 if (flags['linscale']==True):
-    pass
+    try:
+        ax.set_ylim(0, xsLims[1]/1e3)
+    except KeyError:
+        pass
 else:
     ax.set_yscale('log')
-ax.yaxis.grid(which='both', linewidth=0.4)
+    xsLowExp, xsUppExp = [int(np.log10(a)) for a in xsLims]
+    xsoOMs=range(xsLowExp, xsUppExp+1)
+    minorXSticks=[]
+    for i in xsoOMs:
+        for j in range(2,10):
+            minorXSticks.append(j*10**(i-3))
+    ax.yaxis.set_minor_locator(tkr.FixedLocator(minorXSticks))
+    ax.yaxis.set_minor_formatter(tkr.NullFormatter())
+    majorYoOMs=np.logspace(xsLowExp-3,xsUppExp-3, len(xsoOMs),endpoint=True)
+    majorYticks=[]
+    for tick in majorYoOMs:
+        majorYticks.append(tick)
+        majorYticks.append(5*tick)
+    majorYticks=majorYticks+list(xsLims/1e3)
+    majorYticks=list(set(majorYticks))
+    ax.yaxis.set_major_locator(tkr.FixedLocator(majorYticks))
+    try:
+        ax.set_ylim(*xsLims/1e3)
+    except KeyError:
+        pass
+    
+ax.yaxis.set_major_formatter(tkr.EngFormatter(unit='b'))
+
+# Add custom gridlines and tickmarks for energies
+ELowExp, EUppExp = [int(np.log10(a)) for a in ELims]
+EoOMs=range(ELowExp, EUppExp+1)
+minorEticks=[]
+for i in EoOMs:
+    for j in range(2,10):
+        minorEticks.append(j*10**(i+6))
+ax.xaxis.set_minor_locator(tkr.FixedLocator(locs=minorEticks))
+ax.xaxis.set_minor_formatter(tkr.NullFormatter())
+majorXoOMs=np.logspace(ELowExp+6,EUppExp+6, len(EoOMs), endpoint=True)
+majorXticks=[]
+for tick in majorXoOMs:
+    majorXticks.append(tick)
+    majorXticks.append(5*tick)
+majorXticks=majorXticks+list(ELims*1e6)
+majorXticks=list(set(majorXticks))
+ax.xaxis.set_major_locator(tkr.FixedLocator(majorXticks))
 
 # Remove errorbars from showing in the legend
 # https://stackoverflow.com/a/15551976
@@ -135,19 +201,8 @@ handles, labels = ax.get_legend_handles_labels()
 handles = [h[0] for h in handles]
 
 # Deal with script vars that can be varied
-ELims=np.array(config['domain'])
-xsLims=np.array(config['range'])
-EtickSubs=np.array(config['minorETicks'])
-XStickSubs=np.array(config['minorXSTicks'])
-legendLocation=config['legendLoc']
-graphTitle=config['title']
 try:
     ax.set_xlim(*ELims*1e6)
-    ax.set_xticks(ELims*1e6)
-except KeyError:
-    pass
-try:
-    ax.xaxis.set_minor_locator(tkr.LogLocator(subs=EtickSubs))
 except KeyError:
     pass
 try:
@@ -159,27 +214,6 @@ try:
 except KeyError:
     pass
 
-# For y scale handling
-if (flags['linscale']==True):
-    pass
-else:
-    try:
-        ax.set_ylim(xsLims/1e3)
-        ax.set_yticks(xsLims/1e3)
-    except KeyError:
-        pass
-    try:
-        ax.yaxis.set_minor_locator(tkr.LogLocator(subs=XStickSubs))
-    except KeyError:
-        pass
-
-
-# Moved down here to fix labeling for log-y and linear-y
-ax.xaxis.set_major_formatter(tkr.EngFormatter(unit='eV'))
-ax.yaxis.set_major_formatter(tkr.EngFormatter(unit='b'))
-ax.xaxis.set_minor_formatter(tkr.EngFormatter(unit='eV'))
-ax.yaxis.set_minor_formatter(tkr.EngFormatter(unit='b'))
-
 # For custom commands to take place
 try:
     for command in config['customCommands']:
@@ -187,7 +221,12 @@ try:
 except KeyError:
     pass
 
+# Save to folder containing config file
+if (flags['linscale']==True):
+    plt.savefig(f'{os.path.dirname(flags['fName'])}/xsoutput-linscale.{flags['imgType']}')
+else:
+    plt.savefig(f'{os.path.dirname(flags['fName'])}/xsoutput.{flags['imgType']}')
 
-plt.savefig(f'xsoutput.{flags['imgType']}')
+
 if (flags['showPlot']):
     plt.show()

@@ -6,8 +6,6 @@
         "range":[0.01,500],
         "legendLoc":"lower right",
         "figDimensions":[13.3333,7.5],
-        "minorETicks":[1, 2, 8, 9, 11, 12, 13, 14, 15, 18, 21, 23],
-        "minorXSTicks":[1, 2.5, 5],
 
         "zoomBox":
         {

@@ -67,6 +67,13 @@ def xsprocess(args: list[str]) -> tuple[dict, dict, dict]:
     # Read in datasets
     graphData={}
     for dataset in fData['data']:
+        # Skip dataset if display key set to false
+        try:
+            if (dataset['display']==False):
+                continue
+        except KeyError:
+            pass
+
         path=dataset['path']
         with open(path, 'r') as f:
             rawData=f.readlines()
