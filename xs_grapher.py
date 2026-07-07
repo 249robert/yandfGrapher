@@ -1,14 +1,16 @@
-#!/home/robert/yandfGrapher/.venv/bin/python3
+#!/home/robert/249robert-github/yandf-grapher/.venv/bin/python3
 import numpy as np
 import matplotlib.pyplot as plt  # To plot
 import matplotlib.ticker as tkr  # To manage axis tickmark styling
+from matplotlib.lines import Line2D #
 import processargs
 import sys
 import os
 import random  # For random selection of marker types
 
 # Make sure theres something defined for these lists
-markerList=['.','v','^','H','p']
+# markerList=['.','v','^','H','p']
+markerList=list(Line2D.filled_markers)
 lineStyleList=['-','--','-.',':']
 colorList=[
     '#000fff',"#ff0000","#208000",
@@ -16,6 +18,9 @@ colorList=[
     "#fe6bb9","#009E99FF","#980081",
     "#00d36d","#626262","#9c9c00"
 ]
+
+markerList.remove('o') # remove the fat dot
+markerList.remove('8') # octagon looks too similar to fat dot
 
 #
 # =================================================
@@ -29,6 +34,14 @@ def sampleNoReplacement(set: list) -> str:
     set.remove(marker)
     return marker
 
+def firstItemNoReplacement(set: list) -> str:
+    """
+    Sample the zeroth indexed string in a list and
+    remove it
+    """
+    val=set[0]
+    set.remove(val)
+    return val
 
 # Call processing script to read in data and make sense of flags
 # showPlot, dataSets, graphTitle = processargs.xsprocess(sys.argv)
@@ -39,10 +52,10 @@ try:
     if (flags['imgType']=='png'):
         fig, ax = plt.subplots(figsize=config['pngDimensions'])
     else:
-        fig, ax = plt.subplots(figsize=(12.8,7.2))
+        fig, ax = plt.subplots(figsize=config['svgDimensions'])
 except KeyError:
-    print(f"No 'pngDimensions' specified in xsconfig of json")
-    fix, ax = plt.subplots(figsize=(12.8,7.2))
+    print(f"No 'svgDimensions' specified in xsconfig of json")
+    fix, ax = plt.subplots(figsize=config['svgDimensions'])
 
 if (flags['zoomBox']==True):
     try:
@@ -90,18 +103,14 @@ for name, Set in dataSets.items():
     if (isLine):
         markerStyle=''
         markerSize=None 
-        lineStyle=lineStyleList[0]
-        lineStyleList.remove(lineStyle)
+        lineStyle=firstItemNoReplacement(lineStyleList)
         capSize=0
     else:
-        markerStyle='.'
+        markerStyle=firstItemNoReplacement(markerList)
         markerSize=None
         lineStyle=''
         capSize=1.75
-
-    color=colorList[0]
-    colorList.remove(color)
-
+    color=firstItemNoReplacement(colorList)
     
     # For zoombox if specified
     if (flags['zoomBox']):
@@ -174,7 +183,6 @@ else:
         ax.set_ylim(*xsLims/1e3)
     except KeyError:
         pass
-    
 ax.yaxis.set_major_formatter(tkr.EngFormatter(unit='b'))
 
 # Add custom gridlines and tickmarks for energies
@@ -223,10 +231,14 @@ except KeyError:
 
 # Save to folder containing config file
 if (flags['linscale']==True):
-    plt.savefig(f'{os.path.dirname(flags['fName'])}/xsoutput-linscale.{flags['imgType']}')
+    graphName=os.path.join(
+        os.path.dirname(flags['fName']),f'xsoutput-linscale.{flags['imgType']}'
+    )
 else:
-    plt.savefig(f'{os.path.dirname(flags['fName'])}/xsoutput.{flags['imgType']}')
-
+    graphName=os.path.join(
+        os.path.dirname(flags['fName']),f'xsoutput.{flags['imgType']}'
+    )
+plt.savefig(graphName)
 
 if (flags['showPlot']):
     plt.show()
